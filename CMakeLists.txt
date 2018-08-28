@@ -217,7 +217,13 @@ if(UNIX)
         set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> -X32_64 cr <TARGET> <LINK_FLAGS> <OBJECTS>")
     endif()
 elseif(BUILD_SHARED_LIBS AND WIN32)
+    if (MINGW)
+        set_target_properties(zlibstatic PROPERTIES OUTPUT_NAME z)
+        set_target_properties(zlib PROPERTIES ARCHIVE_OUTPUT_NAME z)
+    endif ()
+
     # Creates zlib1.dll when building shared library version
+    set_target_properties(zlib PROPERTIES PREFIX "")
     set_target_properties(zlib PROPERTIES SUFFIX "1.dll")
 endif()
 
