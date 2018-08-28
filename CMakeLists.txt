@@ -208,6 +208,10 @@ if(UNIX)
             NOT CMAKE_SYSTEM_NAME STREQUAL "HP-UX")
         set_target_properties(zlib PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${CMAKE_CURRENT_SOURCE_DIR}/zlib.map\"")
     endif()
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "AIX")
+        set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> -X32_64 cr <TARGET> <LINK_FLAGS> <OBJECTS>")
+    endif()
 elseif(BUILD_SHARED_LIBS AND WIN32)
     # Creates zlib1.dll when building shared library version
     set_target_properties(zlib PROPERTIES SUFFIX "1.dll")
