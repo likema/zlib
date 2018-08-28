@@ -7,6 +7,7 @@ set(VERSION "1.2.11")
 
 option(ASM686 "Enable building i686 assembly implementation")
 option(AMD64 "Enable building amd64 assembly implementation")
+option(DISABLE_STATIC "Disable building static")
 
 include(CheckTypeSize)
 include(CheckFunctionExists)
@@ -181,8 +182,15 @@ if(MINGW)
     set(ZLIB_DLL_SRCS ${CMAKE_CURRENT_BINARY_DIR}/zlib1rc.obj)
 endif(MINGW)
 
+if(NOT DISABLE_STATIC)
+    set(ZLIB_STATIC zlibstatic)
+endif()
+
 add_library(zlib SHARED ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_DLL_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
-add_library(zlibstatic STATIC ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
+if(ZLIB_STATIC)
+    add_library(${ZLIB_STATIC} STATIC ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
+endif()
+
 set_target_properties(zlib PROPERTIES DEFINE_SYMBOL ZLIB_DLL)
 set_target_properties(zlib PROPERTIES SOVERSION 1)
 
@@ -199,7 +207,7 @@ endif()
 
 if(UNIX)
     # On unix-like platforms the library is almost always called libz
-    set_target_properties(zlib zlibstatic PROPERTIES OUTPUT_NAME z)
+    set_target_properties(zlib ${ZLIB_STATIC} PROPERTIES OUTPUT_NAME z)
     if(NOT APPLE AND
             NOT CMAKE_SYSTEM_NAME STREQUAL "AIX" AND
             NOT CMAKE_SYSTEM_NAME STREQUAL "SunOS" AND
@@ -212,7 +220,9 @@ if(UNIX)
     endif()
 elseif(BUILD_SHARED_LIBS AND WIN32)
     if (MINGW)
-        set_target_properties(zlibstatic PROPERTIES OUTPUT_NAME z)
+        if(ZLIB_STATIC)
+            set_target_properties(${ZLIB_STATIC} PROPERTIES OUTPUT_NAME z)
+        endif()
         set_target_properties(zlib PROPERTIES ARCHIVE_OUTPUT_NAME z)
     endif ()
 
@@ -222,7 +232,7 @@ elseif(BUILD_SHARED_LIBS AND WIN32)
 endif()
 
 if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
-    install(TARGETS zlib zlibstatic
+    install(TARGETS zlib ${ZLIB_STATIC}
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib )
